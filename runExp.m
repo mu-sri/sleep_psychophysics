@@ -63,101 +63,26 @@ subj.level = input('Enter subject experience level (1,2 or 3):\n','s') % 1-3
 %% Files and directories
 % Define directories
 saveDir = '/Users/jasminewalter/Documents/MATLAB/Results/';
-imageDir = '/Users/jasminewalter/Documents/MATLAB/ccshs_1800001_EEG/';
+whichData = 5; %1,5,7,13,14
+Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEG/');
+imageDir = strcat('/Users/jasminewalter/Documents/MATLAB/ccshs data/',Dataname);
 
 % Read in image file names
 disp('Creating trials...')
 fileNames = dir(strcat(imageDir,'*.png')); % Later: need to select which night
-nFiles = length(fileNames);
+
+
+% Create a random order
+epochID = epochSampling(whichData); % whichData: 1,5,7,13,14
+
+
+orderMat = [(1:length(epochID))',epochID]; % Col1: order in file Name; Col2: order being shown
+
+nFiles = length(orderMat);
+
 if nFiles == 0
     error
 end
-
-% Create a random order
-
-%% Cross-validation code
-% Example: learn01 data
-% After reading the annotation file from xml using read_annot.m
-%addpath(genpath('/Users/sleeping/Documents/MATLAB/ccshs_data'))
-annotation = load('ccshs_1800001_annot.mat');
-label = annotation.sleepstage;
-
-% Proportion of each sleep stage (0 - wake, 1-4 NREM, 5 - REM)
-stgNum = size(unique(label));
-stgLab = {'W','N1','N2','N3','N4','R'}; % {'W','N1','N2','N3','R'};
-
-%======== Just to check but needed? =========
-for i = 1:stgNum
-    stgID.stgPro(i) = sum(label==i-1);
-end
-% ===============
-
-% Sleep stage IDs
-w = 0; n1 = 0; n2 = 0; n3 = 0; n4 = 0; r = 0;
-for n = 1:length(label)
-    switch label(n)
-        case 0 % Wake
-            w=w+1;
-            stgID.allID.W(w) = n;
-        case 1 % N1
-            n1=n1+1;
-            stgID.allID.N1(n1) = n;
-        case 2 % N2
-            n2=n2+1;
-            stgID.allID.N2(n2) = n;
-        case 3 % N3
-            n3=n3+1;
-            stgID.allID.N3(n3) = n;
-        case 4 % N4
-            n4=n4+1;
-            stgID.allID.N4(n4) = n;
-        case 5 % REM
-            r=r+1;
-            stgID.allID.R(r) = n;
-    end
-end
-
-% Number of segments in each stage
-%======== Just to check but needed? =========
-for i = 1:stgNum
-    % stgID.stgPro(i) = sum(label==i-1);
-end
-stgID.stgPro = [w, n1, n2, n3, n4, r];
-% ===============
-
-clear w n1 n2 n3 n4 r
-% Remove class with less than cut-off
-cutoff = 0.02*length(label);
-n=0;
-for i = 1:length(stgID.stgPro)
-    if stgID.stgPro(i)>=cutoff
-        n=n+1;
-        stgID.useStg(n)=i;
-        stgID.usePro(n)=stgID.stgPro(i);
-        stgID.useStgName(n) = stgLab(i);
-    end
-end
-% Minimum samples
-stgID.Nmin = min(stgID.usePro);
-
-
-% Random sampling from each class
-train70 = round(0.7*stgID.Nmin);
-
-for m=1:length(stgID.useStg)
-    randID = randperm(stgID.usePro(m),stgID.Nmin);
-    allID = stgID.allID.(stgLab{stgID.useStg(m)});
-    useID = allID(randID);
-    stgID.useID.(stgLab{stgID.useStg(m)}) = useID;
-end
-
-temp=[stgID.useID.W,stgID.useID.N1,stgID.useID.N2,stgID.useID.N3,stgID.useID.R];
-randorder=randperm(length(temp));
-randomfile=temp(randorder);
-
-orderMat = [(1:length(randomfile))',randomfile']; % Col1: order in file Name; Col2: order being shown
-
-
 %% Window layout //Put into a separate file later //pretty much copied from Julian's code
 % Window size (blank is full screen)
 %Exp.Cfg.WinSize_ori = round(get(0, 'Screensize')*2/3); % Get rid of 2/3 later for full screen
@@ -384,10 +309,9 @@ trial = []; % Subject trial results struct
     % trial.confidence = []; % The confidence level
 
 for m = 1:nFiles 
-  
-    
     % Save trial number, file name and file ID
     trial(m).number = m;
+    fprintf('%d',m)
     trial(m).fileName = fileNames(orderMat(m,2)).name;
     trial(m).fileID = orderMat(m,2);
     
@@ -455,6 +379,8 @@ for m = 1:nFiles
         save
     end
     
+    save
+    
     stay = 1;
     tmpMask = [];
     confidenceLevel = 0;
@@ -462,7 +388,7 @@ for m = 1:nFiles
     
     
         % added by Nao 17 Sep 7
-    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck
+    [keyIsDown, secs, keyCode, deltaSecs] = KbCheck;
     if keyIsDown
         clear screen 
         save
@@ -528,7 +454,10 @@ for m = 1:nFiles
 end
 Screen('Flip',Exp.Cfg.win, [], 1);
 WaitSecs(0.5)
-
+% Subject response
+cd(saveDir)
+save(strcat(subj.number, '_', subj.initials, '_', subj.level));
+disp('Save')
 % ########################### make a pentagon layout func + call it
         % Colour in the pentagons
         pentColour = []; % Will be used for legend
@@ -564,7 +493,7 @@ WaitSecs(0.5)
         % Present everything
         Screen('Flip',Exp.Cfg.win, [], 1);
 % ############################################################# end
-
+disp('Pentagon')
        
 %% Done screen //This causes sync error on my laptop
 Screen('FillRect',  Exp.Cfg.win, backgroundColour);
@@ -574,11 +503,12 @@ Screen('Flip',Exp.Cfg.win, [], 1);
 WaitSecs(1);
 sca;
 
-
+disp('Done')
 %% Save all workspace variables
 % Clear unnecessary variables
 clearvars showImage confidenceMask classMask;
 
-% Subject response
-save(strcat(saveDir, subj.number, '_', subj.initials, '_', subj.level));
+% % Subject response
+% cd(saveDir)
+% save(strcat(subj.number, '_', subj.initials, '_', subj.level));
 end
