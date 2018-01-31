@@ -128,35 +128,14 @@ legend(stageLabel)
 xlabel('Confidence')
 ylabel('Correct (%)')
 
-% for c=1:4
-%     for i=1:result(c).count
-%         % correctstage(i)=sleepstage(trial(i).fileID);
-%         if result(c).response(i)<5
-%             if result(c).response(i)==result(c).scored(i)+1
-%                result(c).correct(i)=1;
-%             else
-%                 result(c).correct(i)=0;
-%             end
-%         else
-%             if trial(i).response==correctstage(i)
-%                result(c).correct(i)=1;
-%             else
-%                 result(c).correct(i)=0;
-%             end
-%         end
-%         result(c).correctsum = sum(result(c).correct==1);
-%         result(c).accuracy = result(c).correctsum/result(c).count *100;
-%     end
-% end
-%% 
-%%
+%% Fig. 7 Hyponogram with sampled epochs
 figure;
 plot(sleepstage)
 hold on
-plot(index,response,'*')
+plot(index,stageID(response),'*')
 hold off
 
-%%
+%% Fig. 8 Confusion matrix
 % Confusion matrix
 confmat = zeros(5,5);
 for i = 1:length(response)
@@ -175,7 +154,7 @@ end
 totalTarget = sum(confmat,2);
 perResponse = confmat./repmat(totalTarget,1,5)*100;
 
-%% Confusion matrix heat map
+%% Confusion matrix heat map (%)
 figure;
 imagesc(perResponse)
 ax = gca;
