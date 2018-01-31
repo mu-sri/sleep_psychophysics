@@ -108,8 +108,8 @@ end
 figure; 
 bar(scoredCntLvl,'stacked')
 legend(stageLabel)
-ylabel('Count')
-%% Fig.6 % Correct/level with sleep stages
+ylabel('Correct count')
+%% Fig.6 % Correct/level with sleep stages ??
 % Counting correct stage
 for c=1:4
     correctid = find(result(c).score);
@@ -120,7 +120,7 @@ for c=1:4
 end
 
 % Convert to percentage
-% perstageCorrect = stageCorrect./repmat(correctFreq',1,5);
+perstageCorrect = stageCorrect./repmat(confidenceFreq',1,5);
 
 figure; 
 bar(stageCorrect,'stacked')
@@ -168,56 +168,56 @@ ax.XAxisLocation = 'top';
 colorbar
 %colormap('gray')
 %% Confusion matrix - MATLAB + Ben's
-addpath(genpath('/Users/sleeping/Documents/MATLAB/unsup_sleep_staging/HCTSA'))
-
-% Confusion matrix of train data
-
-% Labelled - make non-zero stage
-g_labelTrain = label(trainTS)+1;
-
-% Clustered - Use final clustering output
-g_clustTrain = equi_train+1;
-
-% Cluster 6 becomes 5
-g_labelTrain(g_labelTrain==6) = 5;
-g_clustTrain(g_clustTrain==6) = 5;
-
-% BINARY TO CLASS FUNCTION FROM BEN'S HCTSA
-labelTrainBF= BF_ToBinaryClass(g_labelTrain,nclust);
-clustTrainBF = BF_ToBinaryClass(g_clustTrain,nclust);
-
-
-% Visualise confusion matrix
-figure;
-plotconfusion(labelTrainBF,clustTrainBF)
-
-% Plot setting
-ax = gca;
-ax.XTickLabel(1:nclust)=stgID.useStgName;
-ax.YTickLabel(1:nclust)=stgID.useStgName;
-
-
-%% Confusion matrix of test data
-% Labelled - make non-zero stage  
-g_labelTest = label(testTS)+1;
-
-% Clustered - Use final clustering output
-g_clustTest = equi_test+1;
-
-% Cluster 6 becomes 5
-g_labelTest(g_labelTest==6) = 5;
-g_clustTest(g_clustTest==6) = 5;
-
-% BINARY TO CLASS FUNCTION FROM BEN'S HCTSA
-labelTestBF= BF_ToBinaryClass(g_labelTest,nclust);
-clustTestBF = BF_ToBinaryClass(g_clustTest,nclust);
-
-
-% Visualise confusion matrix
-figure;
-plotconfusion(labelTestBF,clustTestBF)
-
-% Plot setting
-ax = gca;
-ax.XTickLabel(1:nclust)=stgID.useStgName;
-ax.YTickLabel(1:nclust)=stgID.useStgName;
+% addpath(genpath('/Users/sleeping/Documents/MATLAB/unsup_sleep_staging/HCTSA'))
+% 
+% % Confusion matrix of train data
+% 
+% % Labelled - make non-zero stage
+% g_labelTrain = label(trainTS)+1;
+% 
+% % Clustered - Use final clustering output
+% g_clustTrain = equi_train+1;
+% 
+% % Cluster 6 becomes 5
+% g_labelTrain(g_labelTrain==6) = 5;
+% g_clustTrain(g_clustTrain==6) = 5;
+% 
+% % BINARY TO CLASS FUNCTION FROM BEN'S HCTSA
+% labelTrainBF= BF_ToBinaryClass(g_labelTrain,nclust);
+% clustTrainBF = BF_ToBinaryClass(g_clustTrain,nclust);
+% 
+% 
+% % Visualise confusion matrix
+% figure;
+% plotconfusion(labelTrainBF,clustTrainBF)
+% 
+% % Plot setting
+% ax = gca;
+% ax.XTickLabel(1:nclust)=stgID.useStgName;
+% ax.YTickLabel(1:nclust)=stgID.useStgName;
+% 
+% 
+% %% Confusion matrix of test data
+% % Labelled - make non-zero stage  
+% g_labelTest = label(testTS)+1;
+% 
+% % Clustered - Use final clustering output
+% g_clustTest = equi_test+1;
+% 
+% % Cluster 6 becomes 5
+% g_labelTest(g_labelTest==6) = 5;
+% g_clustTest(g_clustTest==6) = 5;
+% 
+% % BINARY TO CLASS FUNCTION FROM BEN'S HCTSA
+% labelTestBF= BF_ToBinaryClass(g_labelTest,nclust);
+% clustTestBF = BF_ToBinaryClass(g_clustTest,nclust);
+% 
+% 
+% % Visualise confusion matrix
+% figure;
+% plotconfusion(labelTestBF,clustTestBF)
+% 
+% % Plot setting
+% ax = gca;
+% ax.XTickLabel(1:nclust)=stgID.useStgName;
+% ax.YTickLabel(1:nclust)=stgID.useStgName;
