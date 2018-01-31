@@ -510,5 +510,5 @@ clearvars showImage confidenceMask classMask;
 
 % % Subject response
 % cd(saveDir)
-% save(strcat(subj.number, '_', subj.initials, '_', subj.level));
+% save(strcat(subj.number, '_', subj.initials, '_', subj.level),'trial');
 end
