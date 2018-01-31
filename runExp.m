@@ -57,15 +57,15 @@ function runExp
 % Copied from Julian's code
 subj.number = input('Enter subject number, 01-99:\n','s'); % '99'
 subj.initials = input('Enter subject initials:\n','s'); % 'JM'
-subj.level = input('Enter subject experience level (1,2 or 3):\n','s') % 1-3
-
+subj.level = input('Enter subject experience level (1,2 or 3):\n','s'); % 1-3
+subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n')
 
 %% Files and directories
 % Define directories
-saveDir = '/Users/jasminewalter/Documents/MATLAB/Results/';
-whichData = 5; %1,5,7,13,14
-Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEG/');
-imageDir = strcat('/Users/jasminewalter/Documents/MATLAB/ccshs data/',Dataname);
+saveDir = 'C:\Users\Piengkwan\Documents\MATLAB\sleep_psychphysics';
+whichData = subj.dataset; %1,5,7,13,14
+Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEGm/');
+imageDir = strcat('C:\Users\Piengkwan\Documents\MATLAB\sleep_psychphysics\',Dataname);
 
 % Read in image file names
 disp('Creating trials...')
@@ -456,7 +456,7 @@ Screen('Flip',Exp.Cfg.win, [], 1);
 WaitSecs(0.5)
 % Subject response
 cd(saveDir)
-save(strcat(subj.number, '_', subj.initials, '_', subj.level));
+save(strcat(subj.number, '_', subj.initials, '_', subj.level),'trial','subj');
 disp('Save')
 % ########################### make a pentagon layout func + call it
         % Colour in the pentagons
