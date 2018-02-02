@@ -1,11 +1,14 @@
+% Read in the constants defined
+ccshs_image_init
+
 %% Reading ccshs edf data and create .jpg images
 currentdir = pwd;
 
 % blockEdfLoad directory
-addpath(genpath('/Users/sleeping/Documents/MATLAB/BlockEdfLoad'))
+addpath(genpath(BLOCKEDFLOAD_DIR))
 
 % CCSHS directory
-datadir = '/Volumes/Seagate Expansion Drive/ccshs/polysomnography/edfs/';
+datadir = CCSHS_DIR;
 
 ccshs_data = dir(strcat([datadir,'*.edf']));
 

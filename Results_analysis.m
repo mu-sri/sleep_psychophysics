@@ -1,9 +1,17 @@
 %% Psychophysics analysis
 
-%% Load result file and annotation file
-% load('1_TA_.mat')
-% load('ccshs_1800005_annot.mat)
 clear result
+clearvars
+
+Results_analysis_init;
+ 
+ %% Load result file and annotation file
+load(PARTICIPANT_RESPONSE_FILE)
+load(ANSWER_FILE)
+
+conflevel_accuracy = zeros(4, 2);
+
+
 %% Accuracy
 for i=1:length(trial)
     index(i) = trial(i).fileID;
@@ -18,8 +26,12 @@ for i=1:length(trial)
     score(i) = (trial(i).response==correctstage(i));
     response(i)=trial(i).response;
     
+    conflvl = 5 - trial(i).confidence; % Reverse the confidence level %
+    conflevel_accuracy(conflvl, (score(i) == 1) + 1) = conflevel_accuracy(conflvl, (score(i) == 1) + 1) + 1;
 end
 accuracy = sum(score==1)/length(trial) *100;
+total_response_by_conflevel = conflevel_accuracy(:,1) + conflevel_accuracy(:,2);
+conflevel_accuracy_percentage = (conflevel_accuracy(:,2)./total_response_by_conflevel)*100;
 
 %% Confidence level
 % Initialise counter of each level
@@ -45,10 +57,12 @@ for i=1:length(trial)
     end
 end
 
-%% Flip condifence level
+%% Flip confidence level
 % When recording the response, 1 = most confidence --> can change this in
 % runExp (later)
 % Key: 4 - Most confident, 1 - not sure
+temp = result;
+
 for c=1:4
     temp(5-c) = result(c);
 end
@@ -139,7 +153,6 @@ hold off
 % Confusion matrix
 confmat = zeros(5,5);
 for i = 1:length(response)
-    
     confmat(correctstage(i),response(i)) = confmat(correctstage(i),response(i))+1;
 %     for r = 1:5
 %         for a = 1:5
@@ -154,9 +167,23 @@ end
 totalTarget = sum(confmat,2);
 perResponse = confmat./repmat(totalTarget,1,5)*100;
 
+% Prepare the labels for image cells
+t = strings(5,5);
+for i=1:5
+    for j=1:5
+        t(i,j) = compose(strcat(num2str(confmat(i,j)),'\n', ...
+            num2str(round(perResponse(i,j), 2)),'%'));
+    end
+end
+
 %% Confusion matrix heat map (%)
 figure;
-imagesc(perResponse)
+imagesc(perResponse);
+title(strcat('Confusion Matrix - No: ', subj.number, ' Initial: ', subj.initials, ' Level:', subj.level));
+x = repmat(1:5,5,1);
+y = x';
+text(x(:), y(:), t, 'HorizontalAlignment', 'Center', 'FontSize', 12, ...
+    'FontWeight', 'bold');
 ax = gca;
 ax.XTick = 1:5;
 ax.YTick = 1:5;
@@ -165,8 +192,37 @@ ax.YTickLabels = {'W','N1','N2','N3','R'};
 ylabel('Target')
 xlabel('Response')
 ax.XAxisLocation = 'top';
+
+%Define colormap
+c1=[0 0.65 0]; %G
+c2=[1 1 0]; %Y
+c3=[1 0 0]; %R
+n1=20;
+n2=20;
+cmap=[linspace(c1(1),c2(1),n1);linspace(c1(2),c2(2),n1);linspace(c1(3),c2(3),n1)];
+cmap(:,end+1:end+n2)=[linspace(c2(1),c3(1),n2);linspace(c2(2),c3(2),n2);linspace(c2(3),c3(3),n2)];
+colormap(cmap')
 colorbar
-%colormap('gray')
+
+
+%% Conditional accuracy
+figure;
+x = 1:4;
+y=conflevel_accuracy_percentage;
+bar(x,y);
+title(strcat('Conditional accuracy - No: ', subj.number, ' Initial: ', subj.initials, ' Level:', subj.level));
+ax = gca;
+ax.XTickLabels = 1:4;
+ylabel('Percentage correct (%)')
+ylim([0, 100]);
+xlabel('Confidence level')
+text(1:length(conflevel_accuracy_percentage),conflevel_accuracy_percentage,strcat(num2str(round(conflevel_accuracy_percentage(:), 2)), '%'),'vert','bottom','horiz','center');
+
+% Draw a line through 20%
+xlim=get(gca,'xlim');
+hold on;
+plot(xlim, [20 20]);
+
 %% Confusion matrix - MATLAB + Ben's
 % addpath(genpath('/Users/sleeping/Documents/MATLAB/unsup_sleep_staging/HCTSA'))
 % 
