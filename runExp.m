@@ -57,8 +57,8 @@ runExp_init
 
 %% Subject ID
 % Copied from Julian's code
-subj.number = input('Enter subject number, 01-99:\n','s'); % '99'
 subj.initials = input('Enter subject initials:\n','s'); % 'JM'
+subj.number = input('Enter block number, 01-99:\n','s'); % '99'
 subj.level = input('Enter subject experience level (1,2 or 3):\n','s'); % 1-3
 subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n')
 
@@ -478,7 +478,7 @@ Screen('Flip',Exp.Cfg.win, [], 1);
 WaitSecs(0.5)
 % Subject response
 cd(saveDir)
-save(strcat(subj.number, '_', subj.initials, '_', subj.level),'trial','subj');
+save(strcat(subj.initials, '_', subj.number, '_', subj.level,'_',subj.dataset),'trial','subj');
 disp('Save')
 % ########################### make a pentagon layout func + call it
         % Colour in the pentagons
