@@ -51,8 +51,10 @@
 %    this though - it works well without delay. )
 % ****************************************************
 
-
 function runExp
+
+runExp_init
+
 %% Subject ID
 % Copied from Julian's code
 subj.number = input('Enter subject number, 01-99:\n','s'); % '99'
@@ -62,10 +64,10 @@ subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n')
 
 %% Files and directories
 % Define directories
-saveDir = 'C:\Users\Piengkwan\Documents\MATLAB\sleep_psychphysics';
+saveDir = PARTICIPANT_RESULT_SAVE_DIR;
 whichData = subj.dataset; %1,5,7,13,14
-Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEGm/');
-imageDir = strcat('C:\Users\Piengkwan\Documents\MATLAB\sleep_psychphysics\',Dataname);
+Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEG/');
+imageDir = strcat(IMAGE_DIR, Dataname);
 
 % Read in image file names
 disp('Creating trials...')
@@ -112,8 +114,8 @@ end
 Exp.Cfg.Color.white = WhiteIndex(Exp.Cfg.screenNumber); % Define white colour
 Exp.Cfg.Color.black = BlackIndex(Exp.Cfg.screenNumber); % Define black colour
 Exp.Cfg.Color.gray = round((Exp.Cfg.Color.white+Exp.Cfg.Color.black)/2); % Define gray colour
-backgroundColour = [177, 187, 217, 100]; % Background; pastel purple
-lightYellow = [255,255,224,100]; % Will use later for highlighting
+backgroundColour = [177, 187, 217, 255]; % Background; pastel purple
+lightYellow = [255,255,224, 150]; % Will use later for highlighting
 
 % Open a new window
 [Exp.Cfg.win, Exp.Cfg.windowRect] = Screen('OpenWindow', ...
@@ -125,6 +127,8 @@ lightYellow = [255,255,224,100]; % Will use later for highlighting
 % Font
 Screen('TextFont', Exp.Cfg.win, 'Arial');
 
+% Blending mode (for transparency effect - for highlighting)
+Screen('BlendFunction', Exp.Cfg.win, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 %% Pentagon coordinates
 % Number of partitions within pentagon structure
@@ -243,7 +247,7 @@ barWidth = (Exp.Cfg.WinSize_ori(3)-Exp.Cfg.WinSize(3))*0.8;
 
 for i = 1:nPartition-1
     % Divide up the legend bar and fill with confidence level colorus
-    Screen('FillRect', Exp.Cfg.win, pentColour(nPartition-i), ... 
+    Screen('FillRect', Exp.Cfg.win, pentColour(i), ... 
         [legendPos_x, legendPos_y+barLength*((i-1)/(nPartition-1)), ...
         legendPos_x+barWidth, legendPos_y+barLength*(i/(nPartition-1))]);
     
@@ -255,10 +259,10 @@ end
 
 % Texts above and below; 'Sure' and 'Not sure' //may need to fix
 Screen('TextSize', Exp.Cfg.win, floor(barWidth/2));
-DrawFormattedText(Exp.Cfg.win, 'Not\nsure', legendPos_x, ...
-    legendPos_y - 5*barWidth/8, [0 0 0]);
 DrawFormattedText(Exp.Cfg.win, 'Sure', legendPos_x, ...
-    legendPos_y + barLength + barWidth/8, [0 0 0]);
+    legendPos_y - 5*barWidth/8, [0 0 0]);
+DrawFormattedText(Exp.Cfg.win, 'Not\nsure', legendPos_x, ...
+    legendPos_y + barLength + barWidth/2, [0 0 0]);
 
 
 %% Pentagon region divisions; which levels/classes does the click belong to?
@@ -308,7 +312,9 @@ trial = []; % Subject trial results struct
     % trial.response = []; % Which sleep class was chosen
     % trial.confidence = []; % The confidence level
 
-for m = 1:nFiles 
+trialLabelRect = []; 
+
+for m = 1:nFiles
     % Save trial number, file name and file ID
     trial(m).number = m;
     fprintf('%d',m)
@@ -323,17 +329,26 @@ for m = 1:nFiles
 	imageOffset_x = winHor/2;
 	imageOffset_y = (winVert)/6;
     showImageProbe = CenterRectOnPoint(image_rect, imageOffset_x, imageOffset_y);
+
     if m==1 % From the second image, we want ot update images a bit later
         % Draw correct images to screen
         Screen('DrawTextures', Exp.Cfg.win, Probe_Tex, [], showImageProbe, 0);
         
+        % Display trial label
+        if ~isempty(trialLabelRect)
+            Screen('FillRect', Exp.Cfg.win, backgroundColour, trialLabelRect);    
+        end
+
+        [nx, ny, trialLabelRect] = DrawFormattedText(Exp.Cfg.win, ['Trial ' int2str(m) ' of ' int2str(nFiles)], ...
+            winHor*0.85, winVert/2, [0 0 0]);
+
+        % Present everything
+        Screen('Flip',Exp.Cfg.win, [], 1);
+
         % Trial start time
         trial(m).tStart = GetSecs();
     end
-
-    % Present everything
-    Screen('Flip',Exp.Cfg.win, [], 1);
-
+    
     if m>1
         % Time delay
         WaitSecs(0.5);
@@ -370,13 +385,22 @@ for m = 1:nFiles
                     DrawFormattedText(Exp.Cfg.win, sleepClassTexts{i}, ...
                         sleepClassTextPos_x(i), sleepClassTextPos_y(i), [0 0 0]);
                 end
+                
+                % Display trial label
+                if ~isempty(trialLabelRect)
+                    Screen('FillRect', Exp.Cfg.win, backgroundColour, trialLabelRect+1);    
+                end
+
+                [nx, ny, trialLabelRect] = DrawFormattedText(Exp.Cfg.win, ['Trial ' int2str(m) ' of ' int2str(nFiles)], ...
+                    winHor*0.85, winVert/2, [0 0 0]);
+                
                 % Present everything
                 Screen('Flip',Exp.Cfg.win, [], 1);
         % ############################################################# end
 
         % Trial start time
         trial(m).tStart = GetSecs();
-        save
+        %save
     end
     
     save
@@ -386,8 +410,7 @@ for m = 1:nFiles
     confidenceLevel = 0;
     sleepClass = 0;
     
-    
-        % added by Nao 17 Sep 7
+    % added by Nao 17 Sep 7
     [keyIsDown, secs, keyCode, deltaSecs] = KbCheck;
     if keyIsDown
         clear screen 
@@ -395,7 +418,6 @@ for m = 1:nFiles
         keyboard 
         return
     end
-
     
     while (stay)
         [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win); 
@@ -406,46 +428,46 @@ for m = 1:nFiles
 				for i = 1:(nPartition-1)
 					if confidenceMask{i}(round(click_y), round(click_x))
 						confidenceLevel = i; % Trial confidence
-                        
-                        
-                        
+                    
                         % Trial confidence
                         trial(m).confidence = i;
-                        
-						% Which sleep class
-						for j = 1:5
-							if classMask{j}(round(click_y), round(click_x))==1
-								sleepClass = j; % Trial response
-                                
+
+                        % Which sleep class
+                        for j = 1:5
+                            if classMask{j}(round(click_y), round(click_x))==1
+                                sleepClass = j; % Trial response
+
                                 % Trial response
                                 trial(m).response = j;                                
-                                
+
                                 % Trial duration time
                                 trial(m).tDuration = GetSecs()-trial(m).tStart;
-								break;
-							end
-						end
-						if sleepClass>0 % Was it clear which class was clicked?                            
-                            % May move onto the next trial
-							stay = 0;
-                            
-							% Highlight the selection
-							Screen('FillPoly', Exp.Cfg.win, lightYellow, ...
-								[pentCoord_x(confidenceLevel,sleepClass), ...
-									pentCoord_y(confidenceLevel,sleepClass); ...
-									pentCoord_x(confidenceLevel,sleepClass+1), ...
-									pentCoord_y(confidenceLevel,sleepClass+1); ...
-									pentCoord_x(confidenceLevel+1,sleepClass+1), ...
-									pentCoord_y(confidenceLevel+1,sleepClass+1); ...
-									pentCoord_x(confidenceLevel+1,sleepClass), ...
-									pentCoord_y(confidenceLevel+1,sleepClass)]);
-							subjectResponse = [subjectResponse; ...
-								orderMat(m,2), confidenceLevel, sleepClass];
+                                disp(trial(m).tDuration);
+                                break;
+                            end
                         end
-						break;
-					end
-				end
-			end
+                        if sleepClass>0 % Was it clear which class was clicked?                            
+                            % May move onto the next trial
+                            stay = 0;
+
+                            % Highlight the selection
+                            Screen('FillPoly', Exp.Cfg.win, lightYellow, ...
+                                [pentCoord_x(confidenceLevel,sleepClass), ...
+                                    pentCoord_y(confidenceLevel,sleepClass); ...
+                                    pentCoord_x(confidenceLevel,sleepClass+1), ...
+                                    pentCoord_y(confidenceLevel,sleepClass+1); ...
+                                    pentCoord_x(confidenceLevel+1,sleepClass+1), ...
+                                    pentCoord_y(confidenceLevel+1,sleepClass+1); ...
+                                    pentCoord_x(confidenceLevel+1,sleepClass), ...
+                                    pentCoord_y(confidenceLevel+1,sleepClass)]);
+                            subjectResponse = [subjectResponse; ...
+                                orderMat(m,2), confidenceLevel, sleepClass];
+                            Screen('Flip',Exp.Cfg.win, [], 1);
+                        end
+                        break;
+                    end
+                end
+            end
         end
     end 
     
@@ -512,3 +534,4 @@ clearvars showImage confidenceMask classMask;
 % cd(saveDir)
 % save(strcat(subj.number, '_', subj.initials, '_', subj.level),'trial','subj');
 end
+
