@@ -420,52 +420,65 @@ for m = 1:nFiles
     end
     
     while (stay)
-        [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win); 
-        if buttons(1)
-            if click_x<winHor && click_y<winVert && click_x>winHor/3 && ...
-                    click_y>1 % This is to prevent out-of-bound index error
-				% Which confidence level
-				for i = 1:(nPartition-1)
-					if confidenceMask{i}(round(click_y), round(click_x))
-						confidenceLevel = i; % Trial confidence
-                    
-                        % Trial confidence
-                        trial(m).confidence = i;
+        % The following code is adapted from https://github.com/Psychtoolbox-3/Psychtoolbox-3/blob/master/Psychtoolbox/PsychBasic/GetMouse.m
+        % It waits for the combination of mouse click and release before
+        % registering that it is a click.
+        [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win);
+        while any(buttons) % if already down, wait for release
+            [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win);
+        end
+        while ~any(buttons) % wait for press
+            [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win);
+        end
+        while any(buttons) % wait for release
+            [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win);
+        end        
 
-                        % Which sleep class
-                        for j = 1:5
-                            if classMask{j}(round(click_y), round(click_x))==1
-                                sleepClass = j; % Trial response
+        % If user reaches here, that means that have click and release the
+        % mouse.
+        if click_x<winHor && click_y<winVert && click_x>winHor/3 && ...
+                click_y>1 % This is to prevent out-of-bound index error
+            % Which confidence level
+            for i = 1:(nPartition-1)
+                if confidenceMask{i}(round(click_y), round(click_x))
+                    confidenceLevel = i; % Trial confidence
 
-                                % Trial response
-                                trial(m).response = j;                                
+                    % Trial confidence
+                    trial(m).confidence = i;
 
-                                % Trial duration time
-                                trial(m).tDuration = GetSecs()-trial(m).tStart;
-                                disp(trial(m).tDuration);
-                                break;
-                            end
+                    % Which sleep class
+                    for j = 1:5
+                        if classMask{j}(round(click_y), round(click_x))==1
+                            sleepClass = j; % Trial response
+
+                            % Trial response
+                            trial(m).response = j;                                
+
+                            % Trial duration time
+                            trial(m).tDuration = GetSecs()-trial(m).tStart;
+                            disp(trial(m).tDuration);
+                            break;
                         end
-                        if sleepClass>0 % Was it clear which class was clicked?                            
-                            % May move onto the next trial
-                            stay = 0;
-
-                            % Highlight the selection
-                            Screen('FillPoly', Exp.Cfg.win, lightYellow, ...
-                                [pentCoord_x(confidenceLevel,sleepClass), ...
-                                    pentCoord_y(confidenceLevel,sleepClass); ...
-                                    pentCoord_x(confidenceLevel,sleepClass+1), ...
-                                    pentCoord_y(confidenceLevel,sleepClass+1); ...
-                                    pentCoord_x(confidenceLevel+1,sleepClass+1), ...
-                                    pentCoord_y(confidenceLevel+1,sleepClass+1); ...
-                                    pentCoord_x(confidenceLevel+1,sleepClass), ...
-                                    pentCoord_y(confidenceLevel+1,sleepClass)]);
-                            subjectResponse = [subjectResponse; ...
-                                orderMat(m,2), confidenceLevel, sleepClass];
-                            Screen('Flip',Exp.Cfg.win, [], 1);
-                        end
-                        break;
                     end
+                    if sleepClass>0 % Was it clear which class was clicked?                            
+                        % May move onto the next trial
+                        stay = 0;
+
+                        % Highlight the selection
+                        Screen('FillPoly', Exp.Cfg.win, lightYellow, ...
+                            [pentCoord_x(confidenceLevel,sleepClass), ...
+                                pentCoord_y(confidenceLevel,sleepClass); ...
+                                pentCoord_x(confidenceLevel,sleepClass+1), ...
+                                pentCoord_y(confidenceLevel,sleepClass+1); ...
+                                pentCoord_x(confidenceLevel+1,sleepClass+1), ...
+                                pentCoord_y(confidenceLevel+1,sleepClass+1); ...
+                                pentCoord_x(confidenceLevel+1,sleepClass), ...
+                                pentCoord_y(confidenceLevel+1,sleepClass)]);
+                        subjectResponse = [subjectResponse; ...
+                            orderMat(m,2), confidenceLevel, sleepClass];
+                        Screen('Flip',Exp.Cfg.win, [], 1);
+                    end
+                    break;
                 end
             end
         end
