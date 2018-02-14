@@ -470,7 +470,7 @@ for m = 1:nFiles
             end
         end
     end 
-    
+    WaitSecs(0.5)
     save
     
 end
