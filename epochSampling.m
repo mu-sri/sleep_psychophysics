@@ -27,15 +27,11 @@ label = annotation.sleepstage;
 %% Remove initial W stage from randomisation and sampling
 % Marking the end of W stage
 endW = [334,380,391,375,174];
-end14 = [1492,1531];
+endS = [1374,1442,1442,1531,1492]; % Remove awake period at the end + no-recording epochs
 
 endID = find(whichData==validData);
 
-if whichData == 14 % Remove the ending epochs for the ccshs_1800014
-    selectID = [endW(endID)+1:end14(1)]';
-else
-    selectID = [endW(endID)+1:length(label)]';
-end
+selectID = [endW(endID)+1:endS(endID)]';
 selectLabel = label(selectID);
 
 %% Counting number of stages
