@@ -268,9 +268,9 @@ ax_width = outerpos(3) - 1.1*ti(1) - 3*ti(3);
 ax_height = outerpos(4) - 1.1*ti(2) - 4*ti(4);
 ax.Position = [left bottom ax_width ax_height];
 
-%set('visible','off')
+set(gcf,'Visible','off')
 %% Save figure as PNG image
-imagename = strcat('ccshs_',num2str(subjectID,'%03d'),'_',num2str(timeID,'%04d'),'save.png');
+imagename = strcat('ccshs_',num2str(subjectID,'%03d'),'_',num2str(timeID,'%04d'),'.png');
 saveas(gcf,imagename) % saveas, imwrite or imsave? print(imagename,'-dpng')?
 close
 end % end/timeID
