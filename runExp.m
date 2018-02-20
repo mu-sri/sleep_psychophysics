@@ -66,7 +66,7 @@ subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n')
 % Define directories
 saveDir = PARTICIPANT_RESULT_SAVE_DIR;
 whichData = subj.dataset; %1,5,7,13,14
-Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEG/');
+Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEGv2/');
 imageDir = strcat(IMAGE_DIR, Dataname);
 
 % Read in image file names
@@ -78,7 +78,7 @@ fileNames = dir(strcat(imageDir,'*.png')); % Later: need to select which night
 epochID = epochSampling(whichData); % whichData: 1,5,7,13,14
 
 
-orderMat = [(1:length(epochID))',epochID]; % Col1: order in file Name; Col2: order being shown
+orderMat = [(1:length(epochID))',epochID']; % Col1: order in file Name; Col2: order being shown
 
 nFiles = length(orderMat);
 

@@ -1,2 +1,2 @@
-PARTICIPANT_RESULT_SAVE_DIR='/Users/Zhao/SleepPsychoPhysics/MATLAB/Results/'
-IMAGE_DIR='/Users/Zhao/SleepPsychoPhysics/Source/sleep_data/ccshs_data/'
+PARTICIPANT_RESULT_SAVE_DIR='//Users/sleeping/Documents/MATLAB/ccshs_data/Result/'
+IMAGE_DIR='/Users/sleeping/Documents/MATLAB/ccshs_data'

@@ -8,7 +8,7 @@ function epochID = epochSampling(whichData)
 
 %% Check if data set exists
 % Use ccshs1800001 as default (avoid error)
-
+addpath(genpath('/Users/sleeping/Downloads/sleep_psych_data'));
 validData = [1,5,7,13,14]; % Valid datasets
 if ~ismember(whichData,validData)
     whichData = 1; % Default case or display error?
@@ -31,7 +31,7 @@ endS = [1374,1442,1442,1531,1492]; % Remove awake period at the end + no-recordi
 
 endID = find(whichData==validData);
 
-selectID = [endW(endID)+1:endS(endID)]';
+selectID = [endW(endID)+1:endS(endID)-1];
 selectLabel = label(selectID);
 
 %% Counting number of stages
