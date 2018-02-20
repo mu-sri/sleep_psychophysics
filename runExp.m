@@ -60,13 +60,13 @@ runExp_init
 subj.initials = input('Enter subject initials:\n','s'); % 'JM'
 subj.number = input('Enter block number, 01-99:\n','s'); % '99'
 subj.level = input('Enter subject experience level (1,2 or 3):\n','s'); % 1-3
-subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n')
+subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n');
 
 %% Files and directories
 % Define directories
 saveDir = PARTICIPANT_RESULT_SAVE_DIR;
 whichData = subj.dataset; %1,5,7,13,14
-Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEGv2/');
+Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEG/');
 imageDir = strcat(IMAGE_DIR, Dataname);
 
 % Read in image file names
@@ -78,7 +78,7 @@ fileNames = dir(strcat(imageDir,'*.png')); % Later: need to select which night
 epochID = epochSampling(whichData); % whichData: 1,5,7,13,14
 
 
-orderMat = [(1:length(epochID))',epochID']; % Col1: order in file Name; Col2: order being shown
+orderMat = [(1:length(epochID))',epochID]; % Col1: order in file Name; Col2: order being shown
 
 nFiles = length(orderMat);
 
