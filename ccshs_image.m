@@ -17,7 +17,8 @@ num_data = length(ccshs_data);
 
 %% Reading EDF using blockEdfLoad 
 % https://sleepdata.org/community/tools/dennisdean-block-edf-loader
-for n = 1:2
+for n = 2:5
+% n=1; % Change into for loop when 1 subject code is done
 cd(datadir)
 edfFile = ccshs_data(n).name;
 [header,signalHeader,signalCell] = blockEdfLoad(edfFile);
@@ -27,7 +28,7 @@ subjectID = str2num(edfFile(16:18));
 
 %% Initialise figure and folder 
 cd(currentdir)
-foldername = strcat('ccshs_1800',num2str(subjectID,'%03d'),'_3EXG');
+foldername = strcat('ccshs_1800',num2str(subjectID,'%03d'),'_1EEG');
 mkdir(foldername);
 cd(foldername)
 
@@ -45,20 +46,20 @@ selectedHeader(1).sampling_rate = signalHeader(1).samples_in_record;
 % selectedHeader(2).signal_type = 'EEG';
 % selectedHeader(2).sampling_rate = signalHeader(2).samples_in_record;
 % 
-selectedSignal{2} = signalCell{5}-signalCell{4};
-selectedHeader(2).signal_labels = 'LOC-A2';
-selectedHeader(2).signal_type = 'EOG';
-selectedHeader(2).sampling_rate = signalHeader(5).samples_in_record;
+% selectedSignal{3} = signalCell{5}-signalCell{4};
+% selectedHeader(3).signal_labels = 'LOC-A2';
+% selectedHeader(3).signal_type = 'EOG';
+% selectedHeader(3).sampling_rate = signalHeader(5).samples_in_record;
 % 
 % selectedSignal{4} = signalCell{6}-signalCell{3};
 % selectedHeader(4).signal_labels = 'ROC-A1';
 % selectedHeader(4).signal_type = 'EOG';
 % selectedHeader(4).sampling_rate = signalHeader(6).samples_in_record;
 % 
-selectedSignal{3} = signalCell{13}-signalCell{14};
-selectedHeader(3).signal_labels = 'EMG1-EMG2';
-selectedHeader(3).signal_type = 'EMG';
-selectedHeader(3).sampling_rate = signalHeader(13).samples_in_record;
+% selectedSignal{5} = signalCell{13}-signalCell{14};
+% selectedHeader(5).signal_labels = 'EMG1-EMG2';
+% selectedHeader(5).signal_type = 'EMG';
+% selectedHeader(5).sampling_rate = signalHeader(13).samples_in_record;
 % 
 % selectedSignal{6} = signalCell{8};
 % selectedHeader(6).signal_labels = 'ECG';
@@ -142,10 +143,10 @@ for s = 1:num_signals
     t = [0:length(signal)-1]/samplingRate; % = record_duration
 
     % Parameters for normalisation - use global max and min if amplitude
-    % matters. If not, set an arbitary value
-    sigMin = -0.3; %min(signal);
-    sigMax = 0.3; %max(signal);
-    signalRange = sigMax - sigMin;
+    % matters
+    sigMin = -0.25; % min(signal);
+    sigMax =  0.25; % max(signal);
+%     signalRange = sigMax - sigMin;
 %     
     % Identify indexes of 30 seconds of signal according to tstart, tend
     % Otherwise, indexes = find(t<=tmax);
@@ -153,10 +154,10 @@ for s = 1:num_signals
     tEnd = find(t==timeID*30);
     indexes = tStart:1:tEnd;
     signal = signal(indexes);
-    time = t(1:length(indexes)); % time = t(indexes); % Hide real time, always display 0 -30 seconds 
+    time = t(1:length(indexes)); % time = t(indexes); % Hide real time 
     % time = t(find(t<=tmax));
 
-    %% Filtering : 60-Hz notch filter
+%     %% 60-Hz notch filter
 %     w0 = 60/(samplingRate/2);
 %     bw = w0/35;
 %     [b,a] = iirnotch(w0,bw);
@@ -167,111 +168,80 @@ for s = 1:num_signals
 %     n_order = 1;
 %     [b,a] = butter(n_order,wn);
 %     signal = filter(b,a,signal);
-%% Normalize signal
+    %%
+    % Normalize signal
 %     sigMin = min(signal);
 %     sigMax = max(signal);
 %     signalRange = sigMax - sigMin;
+% 
 %      signal = (signal - sigMin); % Normalised to 0
+%      if signalRange~= 0
+%         signal = signal/(sigMax-sigMin);
+%      end
+%     
+%     % Add signal below the previous one
+% %     signal = signal + (num_signals - s + 1);
+%     signal = signal - 0.5*mean(signal) + (num_signals - s + 1);
 
-%% Switch-case for num_signals
-     if signalRange~= 0
-        signal = signal/(sigMax-sigMin);
-     end
-switch (num_signals)
-    case 1
-        % Centred around 0
-        signal = signal - mean(signal);
-    case {2,3}
-        % Add signal below the previous one
-        signal = signal - mean(signal) + (num_signals - s + 1);
-        %     signal = signal + (num_signals - s + 1); % Without zero-centred
-        %     signal = signal - 0.5*mean(signal) + (num_signals - s + 1);
-        % Plot line dividing signals
-        plot(time,s-0.5*ones(1,length(time)),'color',[0.5,0.5,0.5])
-end
-    
     % Color code signal type - can be customised + will depends on screen setting
     switch (selectedHeader(s).signal_type)
         case 'EEG'
-            ccode = [0.1,0.5,0.8];
+            ccode = [0.1,0.3,0.8];
         case 'EOG'
             ccode = [0.1,0.5,0.3];
         case 'EMG'
-            ccode = [0.8,0.5,0.2];
+            ccode = [0.7,0.4,0.1];
         case 'ECG'
             ccode = [0.8,0.1,0.2];
         otherwise
             ccode = [0.2,0.2,0.2];
     end
     % Plot signal
-    plot(time, signal,'Color',ccode);
+    plot(time, signal,'k');
     hold on
 end
-%% Plot configuration
+%%
 grid on
+
+% Set axis limits -?? default?
+% v = axis();
+% v(1:2) = [0 tmax];
+% v(3:4) = [-0.5 num_signals+1];
+% axis(v);
+
+% Set x axis
+xlabel('Time(sec)');
 ax = gca;
+ax.XTick = [0:30];
+ax.FontSize = 20;
+
+
+% Set y axis labels
+% signalLabels = cell(1,num_signals); %Revert the order such that first channel stays on top
+% for s = 1:num_signals
+%     signalLabels{num_signals-s+1} = selectedHeader(s).signal_labels;
+% end
+% ax.YTick = 1:num_signals;
+% ax.YTickLabels = signalLabels;
+% ax.FontSize = 15;
+ylabel('Amplitude (mV)')
+% ax.YTick = linspace(sigMin,sigMax,30);
+axis([0 30 sigMin sigMax])
+
+% Set figure size
 fig = gcf;
-switch (num_signals)
-    case 1
-        % Set axes limits
-        v = axis();
-        v(1:2) = [0,tmax];
-        v(3:4) = [sigMin,sigMax];
-        axis(v);
-        % Set x-axis 
-        xlabel('Time(sec)')
-        ax.XTick = [0:30];
-        ax.FontSize = 10;
-        % Set y-axis
-        ylabel('Amplitude(\muV)')
-        ax.YTick = linspace(sigMin,sigMax,30);
+fig.Units = 'points';
+fig.Position = [0, 10, 1450, 350]; % ***** New sizeSize of object images; ratio ok??
 
-    case {2,3}
-        % Set axis limits
-        v = axis();
-        v(1:2) = [0,tmax];
-        v(3:4) = [0.5 num_signals+0.5];
-        axis(v);
-        % Set x axis
-        xlabel('Time(sec)');
-        ax = gca;
-        ax.XTick = [0:30];
-        ax.FontSize = 10;
-        % Set y axis labels
-        ylabel('Amplitude (mV)')
-        %% Without scale
-        signalLabels = cell(1,num_signals); %Revert the order such that first channel stays on top
-        % for s = 1:num_signals
-        %     signalLabels{num_signals-s+1} = selectedHeader(s).signal_labels;
-        % end
-        %ax.YTick = 1:num_signals;
-        %ax.YTickLabels = signalLabels;
-        %% With scale
-        ax.YTick = [0.55,1,1.45,1.55,2,2.45,2.55,3,3.45];
-        ax.YTickLabels = {'-300',selectedHeader(3).signal_labels,'+300','-300',selectedHeader(2).signal_labels,'+300','-300',selectedHeader(1).signal_labels,'+300'};
-        ax.FontSize = 15;
-        % 
-        % Set figure size
-        fig.Units = 'pixels';
-        fig.Position = [0,0,850,723];
-        fig.Color = [0.95 0.95 0.95];
-        
+% fig.Position = [10,10,2048,683]; %% reduce size
+fig.Color = [0.95 0.95 0.95];
+% set(gcf,'Units','Normalized','OuterPosition',[0,0.04,1,0.96]) % Fullscreen figure
 
-end
 
-% Reduce white space ** Can be adjusted
-outerpos = ax.OuterPosition;
-ti = ax.TightInset; 
-left = outerpos(1) + 1.1*ti(1);
-bottom = outerpos(2) + 1.1*ti(2);
-ax_width = outerpos(3) - 1.1*ti(1) - 3*ti(3);
-ax_height = outerpos(4) - 1.1*ti(2) - 4*ti(4);
-ax.Position = [left bottom ax_width ax_height];
-
-set(gcf,'Visible','off')
 %% Save figure as PNG image
 imagename = strcat('ccshs_',num2str(subjectID,'%03d'),'_',num2str(timeID,'%04d'),'.png');
-saveas(gcf,imagename) % saveas, imwrite or imsave? print(imagename,'-dpng')?
+saveas(gcf,imagename) % saveas, imwrite or imsave?
+
 close
 end % end/timeID
 

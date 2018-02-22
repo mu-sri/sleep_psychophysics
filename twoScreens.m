@@ -52,23 +52,21 @@
 % ****************************************************
 
 function twoScreens
-
-runExp_init
-
 %% Subject ID
 % Copied from Julian's code
 subj.initials = input('Enter subject initials:\n','s'); % 'JM'
 subj.number = input('Enter block number, 01-99:\n','s'); % '99'
 subj.level = input('Enter subject experience level (1,2 or 3):\n','s'); % 1-3
-subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n')
-
+subj.dataset = input('Enter sleep subject dataset (1,5,7,13,14,..):\n');
+%subj.nchannel = input('Enter number of channels (1 or 3):\n');
 %Screen('Preference', 'SkipSyncTests', 1);
-
+%%
+runExp_init
 %% Files and directories
 % Define directories
 saveDir = PARTICIPANT_RESULT_SAVE_DIR;
 whichData = subj.dataset; %1,5,7,13,14
-Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_1EEG/');
+Dataname = strcat('ccshs_1800',num2str(whichData,'%03d'),'_3EXG/');
 imageDir = strcat(IMAGE_DIR, Dataname);
 
 % Read in image file names
@@ -113,8 +111,8 @@ else
 end
 
 % ZHAO - Remove me
-Exp.Cfg.screenNumber1 = max(Exp.Cfg.screens)-1
-Exp.Cfg.screenNumber2 = max(Exp.Cfg.screens)
+Exp.Cfg.screenNumber1 = max(Exp.Cfg.screens)
+Exp.Cfg.screenNumber2 = max(Exp.Cfg.screens)-1
 
 Exp.Cfg.Win1Size_ori = round(Screen('Rect', Exp.Cfg.screenNumber1));
 Exp.Cfg.Win1Size = Exp.Cfg.Win1Size_ori;
@@ -358,7 +356,6 @@ for m = 1:nFiles
     % Save trial number, file name and file ID
     trial(m).number = m;
     fprintf('%d',m)
-    
     trial(m).fileName = fileNames(orderMat(m,2)).name;
     trial(m).fileID = orderMat(m,2);
     
@@ -470,67 +467,63 @@ for m = 1:nFiles
     end
     
     while (stay)
-        % The following code is adapted from https://github.com/Psychtoolbox-3/Psychtoolbox-3/blob/master/Psychtoolbox/PsychBasic/GetMouse.m
-        % It waits for the combination of mouse click and release before
-        % registering that it is a click.
-        [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win2);
-        while any(buttons) % if already down, wait for release
-            [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win2);
-        end
-        while ~any(buttons) % wait for press
-            [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win2);
-        end
-        while any(buttons) % wait for release
-            [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win2);
-        end        
+        [click_x, click_y, buttons] = GetMouse(Exp.Cfg.win2); 
+        if buttons(1)
+%             fprintf('\n--------- Mouse click ---------');
+%             fprintf('\nclick_x: %d', click_x);
+%             fprintf('\nwin2Hor: %d', win2Hor);
+%             fprintf('\nclick_y: %d', click_y);
+%             fprintf('\nwin2Vert: %d', win2Vert);
+%             fprintf('\nwin2Hor/3: %d', win2Hor/3);
+            
+%             if click_x<win2Hor && click_y<win2Vert && click_x>win2Hor/3 && ...
+%                     click_y>1 % This is to prevent out-of-bound index error
+            if click_x<win2Hor && click_y<win2Vert && ...
+                    click_y>1 && click_x>1 % This is to prevent out-of-bound index error
+				% Which confidence level
+				for i = 1:(nPartition-1)
+					if confidenceMask{i}(round(click_y), round(click_x))
+						confidenceLevel = i; % Trial confidence
+                    
+                        % Trial confidence
+                        trial(m).confidence = i;
 
-        % If user reaches here, that means that have click and release the
-        % mouse.
-        if click_x<win2Hor && click_y<win2Vert && ...
-                click_y>1 && click_x>1 % This is to prevent out-of-bound index error
-            % Which confidence level
-            for i = 1:(nPartition-1)
-                if confidenceMask{i}(round(click_y), round(click_x))
-                    confidenceLevel = i; % Trial confidence
+                        % Which sleep class
+                        for j = 1:5
+                            if classMask{j}(round(click_y), round(click_x))==1
+                                sleepClass = j; % Trial response
 
-                    % Trial confidence
-                    trial(m).confidence = i;
+                                % Trial response
+                                trial(m).response = j;                                
 
-                    % Which sleep class
-                    for j = 1:5
-                        if classMask{j}(round(click_y), round(click_x))==1
-                            sleepClass = j; % Trial response
-
-                            % Trial response
-                            trial(m).response = j;                                
-
-                            % Trial duration time
-                            trial(m).tDuration = GetSecs()-trial(m).tStart;
-                            disp(trial(m).tDuration);
-                            break;
+                                % Trial duration time
+                                trial(m).tDuration = GetSecs()-trial(m).tStart;
+                                disp(trial(m).tDuration);
+                                break;
+                            end
                         end
-                    end
-                    disp("Sleep class");
-                    disp(sleepClass);
-                    if sleepClass>0 % Was it clear which class was clicked?                            
-                        % May move onto the next trial
-                        stay = 0;
+                        disp("Sleep class");
+                        disp(sleepClass);
+                        if sleepClass>0 % Was it clear which class was clicked?                            
+                            % May move onto the next trial
+                            stay = 0;
 
-                        % Highlight the selection
-                        Screen('FillPoly', Exp.Cfg.win2, lightYellow, ...
-                            [pentCoord_x(confidenceLevel,sleepClass), ...
-                                pentCoord_y(confidenceLevel,sleepClass); ...
-                                pentCoord_x(confidenceLevel,sleepClass+1), ...
-                                pentCoord_y(confidenceLevel,sleepClass+1); ...
-                                pentCoord_x(confidenceLevel+1,sleepClass+1), ...
-                                pentCoord_y(confidenceLevel+1,sleepClass+1); ...
-                                pentCoord_x(confidenceLevel+1,sleepClass), ...
-                                pentCoord_y(confidenceLevel+1,sleepClass)]);
-                        subjectResponse = [subjectResponse; ...
-                            orderMat(m,2), confidenceLevel, sleepClass];
-                        Screen('Flip',Exp.Cfg.win2, [], 1);
+                            % Highlight the selection
+                            Screen('FillPoly', Exp.Cfg.win2, lightYellow, ...
+                                [pentCoord_x(confidenceLevel,sleepClass), ...
+                                    pentCoord_y(confidenceLevel,sleepClass); ...
+                                    pentCoord_x(confidenceLevel,sleepClass+1), ...
+                                    pentCoord_y(confidenceLevel,sleepClass+1); ...
+                                    pentCoord_x(confidenceLevel+1,sleepClass+1), ...
+                                    pentCoord_y(confidenceLevel+1,sleepClass+1); ...
+                                    pentCoord_x(confidenceLevel+1,sleepClass), ...
+                                    pentCoord_y(confidenceLevel+1,sleepClass)]);
+                            subjectResponse = [subjectResponse; ...
+                                orderMat(m,2), confidenceLevel, sleepClass];
+                            Screen('Flip',Exp.Cfg.win2, [], 1);
+                        end
+                        break;
                     end
-                    break;
                 end
             end
         end
