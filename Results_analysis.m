@@ -182,7 +182,7 @@ imagesc(perResponse);
 title(strcat('Confusion Matrix - No: ', subj.number, ' Initial: ', subj.initials, ' Level:', subj.level));
 x = repmat(1:5,5,1);
 y = x';
-text(x(:), y(:), t, 'HorizontalAlignment', 'Center', 'FontSize', 12, ...
+text(x(:), y(:), cellstr(t), 'HorizontalAlignment', 'Center', 'FontSize', 12, ...
     'FontWeight', 'bold');
 ax = gca;
 ax.XTick = 1:5;
