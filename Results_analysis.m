@@ -201,9 +201,10 @@ n1=20;
 n2=20;
 cmap=[linspace(c1(1),c2(1),n1);linspace(c1(2),c2(2),n1);linspace(c1(3),c2(3),n1)];
 cmap(:,end+1:end+n2)=[linspace(c2(1),c3(1),n2);linspace(c2(2),c3(2),n2);linspace(c2(3),c3(3),n2)];
-colormap(cmap')
-h = colorbar
-set(h, 'ylim', [0 100])
+colormap(cmap');
+h = colorbar;
+set(h, 'ylim', [0 100]);
+caxis([0 100]);
 
 
 %% Conditional accuracy
